@@ -54,7 +54,7 @@
                   <div class="cell">
                     <label>Price:</label>
                   </div>
-                  <div class="cell">$4.82</div>
+                  <div class="cell">$2.12</div>
                 </div>
                 <div class="row">
                   <div class="cell">
@@ -147,7 +147,11 @@
       </main>
 
       <!-- custom component from script template -->
-      <sidebar v-if="showSidebar" :toggle="toggleSidebar" />
+      <sidebar 
+        v-if="showSidebar" 
+        :toggle="toggleSidebar" 
+        :cart="cart"
+      />
 
       <footer></footer>
     </div>
@@ -158,11 +162,7 @@
         data() {
           return {
             showSidebar: false,
-            inventory: {
-              carrots: 0,
-              pineapples: 0,
-              cherries: 0,
-            },
+            inventory: [],
             cart: {
               carrots: 0,
               pineapples: 0,
@@ -179,13 +179,23 @@
             this.showSidebar = !this.showSidebar
           },
         },
+        async mounted() {
+          const res = await fetch("./food.json")
+          const data = await res.json()
+          this.inventory = data
+        }
         
       });
 
       // By adding this: props: ["toggle"] it is possible to reference the following:
       // :toggle="toggleSidebar" so that i can close by clicking X icon
       app.component("sidebar", {
-        props: ["toggle"],
+        props: ["toggle", "cart"],
+        computed: {
+          cartTotal() {
+            return (this.cart.carrots * 2.12).toFixed(2)
+          }
+        },
         template: `
           <aside class="cart-container">
           <div class="cart">
@@ -212,10 +222,12 @@
                 <tbody>
                   <tr>
                     <td><i class="icofont-carrot icofont-3x"></i></td>
-                    <td>Carrot</td>
-                    <td>$1.00</td>
-                    <td class="center">1</td>
-                    <td>$1.00</td>
+                    <td class="center">Carrot</td>
+                    <td class="center">$2.10</td>
+                    <td class="center">{{ cart.carrots }}</td>
+                    <td class="center">
+                      \${{ (cart.carrots * 2.12 * (100/100)).toFixed(2) }}
+                    </td>
                     <td class="center">
                       <button class="btn btn-light cart-remove">
                         &times;
@@ -227,7 +239,12 @@
 
               <p class="center"><em>No items in cart</em></p>
               <div class="spread">
-                <span><strong>Total:</strong> $1.00</span>
+                <span>
+                  <strong>
+                    Total:
+                  </strong>
+                  \${{ cartTotal }}
+                </span>
                 <button class="btn btn-light">Checkout</button>
               </div>
             </div>
