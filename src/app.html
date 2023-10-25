@@ -89,6 +89,7 @@
         v-if="showSidebar" 
         :toggle="toggleSidebar" 
         :cart="cart"
+        :inventory="inventory"
       />
 
       <footer></footer>
@@ -125,12 +126,21 @@
       // By adding this: props: ["toggle"] it is possible to reference the following:
       // :toggle="toggleSidebar" so that i can close by clicking X icon
       app.component("sidebar", {
-        props: ["toggle", "cart"],
+        props: ["toggle", "cart", "inventory"],
         computed: {
           cartTotal() {
             return (this.cart.carrots * 2.12).toFixed(2)
           }
         },
+        methods: {
+          getPrice(name) {
+            const product = this.inventory.find((p) => {
+              return p.name === name
+            })
+            return (product.price.USD).toFixed(2)
+          }
+        },
+        
         template: `
           <aside class="cart-container">
           <div class="cart">
@@ -155,11 +165,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
+                  <tr v-for="(quantity, key, i) in cart" :key="i" >
                     <td><i class="icofont-carrot icofont-3x"></i></td>
-                    <td class="center">Carrot</td>
-                    <td class="center">$2.10</td>
-                    <td class="center">{{ cart.carrots }}</td>
+                    <td class="center">{{ key }}</td>
+                    <td class="center">\${{ getPrice(key) }}</td>
+                    <td class="center">{{ quantity }}</td>
                     <td class="center">
                       \${{ (cart.carrots * 2.12 * (100/100)).toFixed(2) }}
                     </td>
