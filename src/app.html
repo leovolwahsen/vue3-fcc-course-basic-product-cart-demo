@@ -36,8 +36,9 @@
       <main class="wrapper">
         <h2>Recommended</h2>
 
-        <div 
-          v-for="(product, i) in inventory.slice(0, 3)" :key="product.id"
+        <div
+          v-for="(product, i) in inventory.slice(0, 3)"
+          :key="product.id"
           class="recommended"
         >
           <div class="card">
@@ -57,19 +58,14 @@
                   <div class="cell">
                     <label>Price:</label>
                   </div>
-                  <div class="cell">
-                    ${{ (product.price.USD).toFixed(2) }}
-                  </div>
+                  <div class="cell">${{ (product.price.USD).toFixed(2) }}</div>
                 </div>
                 <div class="row">
                   <div class="cell">
                     <label>Quantity:</label>
                   </div>
                   <div class="cell">
-                    <input 
-                      type="number" 
-                      v-model.number="product.quantity" 
-                    />
+                    <input type="number" v-model.number="product.quantity" />
                   </div>
                 </div>
               </form>
@@ -80,16 +76,16 @@
               </button>
             </div>
           </div>
-
         </div>
       </main>
 
       <!-- custom component from script template -->
-      <sidebar 
-        v-if="showSidebar" 
-        :toggle="toggleSidebar" 
+      <sidebar
+        v-if="showSidebar"
+        :toggle="toggleSidebar"
         :cart="cart"
         :inventory="inventory"
+        :removeItem="removeItem"
       />
 
       <footer></footer>
@@ -107,46 +103,55 @@
         },
         methods: {
           addToCart(name, index) {
-            if (!this.cart[name]) this.cart[name] = 0
+            if (!this.cart[name]) this.cart[name] = 0;
             this.cart[name] += this.inventory[index].quantity;
             console.log(this.cart);
           },
           toggleSidebar() {
-            this.showSidebar = !this.showSidebar
+            this.showSidebar = !this.showSidebar;
+          },
+          removeItem(name) {
+            delete this.cart[name];
           },
         },
         async mounted() {
-          const res = await fetch("./food.json")
-          const data = await res.json()
-          this.inventory = data
-        }
-        
+          try {
+            const res = await fetch("./food.json");
+            if (!res.ok) {
+              throw new Error(`HTTP error! Status: ${res.status}`);
+            }
+            const data = await res.json();
+            this.inventory = data;
+          } catch (error) {
+            console.error("Error", error);
+          }
+        },
       });
 
       // By adding this: props: ["toggle"] it is possible to reference the following:
       // :toggle="toggleSidebar" so that i can close by clicking X icon
       app.component("sidebar", {
-        props: ["toggle", "cart", "inventory"],
-        computed: {
-          
-        },
+        props: ["toggle", "cart", "inventory", "removeItem"],
         methods: {
           getPrice(name) {
             const product = this.inventory.find((p) => {
-              return p.name === name
-            })
-            return (product.price.USD).toFixed(2)
+              return p.name === name;
+            });
+            return product.price.USD.toFixed(2);
           },
           calculateTotalCost() {
             // I generate here a array of [key, value]
             // I set default value 0 for Total
-            const total = Object.entries(this.cart).reduce((acc, curr, index) => {
-              return acc + (curr[1] * this.getPrice(curr[0]))
-            }, 0)
-            return total.toFixed(2)
-          }
+            const total = Object.entries(this.cart).reduce(
+              (acc, curr, index) => {
+                return acc + curr[1] * this.getPrice(curr[0]);
+              },
+              0
+            );
+            return total.toFixed(2);
+          },
         },
-        
+
         template: `
           <aside class="cart-container">
           <div class="cart">
@@ -199,7 +204,10 @@
                   </strong>
                   \${{ calculateTotalCost() }}
                 </span>
-                <button class="btn btn-light">Checkout</button>
+                <button 
+                  @click="removeItem(key)" 
+                  class="btn btn-light"
+                >Checkout</button>
               </div>
             </div>
           </div>
