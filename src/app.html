@@ -128,9 +128,7 @@
       app.component("sidebar", {
         props: ["toggle", "cart", "inventory"],
         computed: {
-          cartTotal() {
-            return (this.cart.carrots * 2.12).toFixed(2)
-          }
+          
         },
         methods: {
           getPrice(name) {
@@ -138,6 +136,14 @@
               return p.name === name
             })
             return (product.price.USD).toFixed(2)
+          },
+          calculateTotalCost() {
+            // I generate here a array of [key, value]
+            // I set default value 0 for Total
+            const total = Object.entries(this.cart).reduce((acc, curr, index) => {
+              return acc + (curr[1] * this.getPrice(curr[0]))
+            }, 0)
+            return total.toFixed(2)
           }
         },
         
@@ -171,7 +177,7 @@
                     <td class="center">\${{ getPrice(key) }}</td>
                     <td class="center">{{ quantity }}</td>
                     <td class="center">
-                      \${{ (cart.carrots * 2.12 * (100/100)).toFixed(2) }}
+                      \${{ (quantity * getPrice(key)).toFixed(2) }}
                     </td>
                     <td class="center">
                       <button class="btn btn-light cart-remove">
@@ -182,13 +188,16 @@
                 </tbody>
               </table>
 
-              <p class="center"><em>No items in cart</em></p>
+              <p 
+                v-if="!Object.keys(cart).length"
+                class="center"
+              ><em>No items in cart</em></p>
               <div class="spread">
                 <span>
                   <strong>
                     Total:
                   </strong>
-                  \${{ cartTotal }}
+                  \${{ calculateTotalCost() }}
                 </span>
                 <button class="btn btn-light">Checkout</button>
               </div>
